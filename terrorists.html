@@ -11,14 +11,40 @@
 
 
      <script>
+     var terroristData = {}
+     var countries = Datamap.prototype.worldTopo.objects.world.geometries;
+     var mapColors = {}
+
+     d3.csv("relevant_terrorist.csv", function(data){
+       data.forEach(function(element) {
+         terroristData[element.country_txt + ""] = element
+       });
+       //console.log(terroristData["Afghanistan"]);
+       for (var i = 0, j = countries.length; i < j; i++) {
+         console.log(terroristData[countries[i].properties.name]);
+         //mapColors[countries[i].id] = {fillKey: 'red'}
+       }
+     });
+     //console.log(terroristData);
+     //console.log(terroristData["Afghanistan"]);
+
+     /**/
+
+     //
+     //console.log(map.data)
        //basic map config with custom fills, mercator projection
       var map = new Datamap({
         scope: 'world',
         element: document.getElementById('container1'),
         projection: 'mercator',
-        height: 500 });
-
-
+        height: 500,
+        fills: {
+          black: 'black',
+          blue: 'blue',
+          red: 'red'
+        },
+        data : mapColors
+       });
 
 
 
