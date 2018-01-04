@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Ataques terroristas</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom fonts for this template -->
+    <link href="https://fonts.googleapis.com/css?family=Saira+Extra+Condensed:100,200,300,400,500,600,700,800,900"
+          rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i,800,800i"
+          rel="stylesheet">
+    <link href="vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <link href="vendor/devicons/css/devicons.min.css" rel="stylesheet">
+    <link href="vendor/simple-line-icons/css/simple-line-icons.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/resume.min.css" rel="stylesheet">
+
+</head>
+
+<body id="page-top">
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top" id="sideNav" style="width: 150px">
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav">
+            <li class="nav-item">
+                <a class="nav-link js-scroll-trigger" href="#sobre">Sobre</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link js-scroll-trigger" href="#mapa">Mapa</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link js-scroll-trigger" href="#gráfico">Gráfico</a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+<div class="container-fluid p-0">
+
+    <section class="resume-section p-3 p-lg-5 d-flex d-column" id="sobre">
+        <div class="my-auto">
+            <h1 class="mb-0">Ataques
+                <span class="text-primary">terroristas</span>
+            </h1>
+            <div class="subheading mb-5">Uma análise sobre mais de 170 mil ataques de
+                <span class="text-primary">1970-2016</span>
+            </div>
+            <p class="mb-5"></p>
+
+            <p class="mb-5">Alguns dados a letra grande como número de ataques total, ano com maior numero de
+                ataques, média de ataques por ano, média de mortes por ano, média de mortes por ataque, pais com mais
+                ataques, pais com mais mortes - analise pode ser feita no pandas em python
+            </p>
+            <ul class="list-inline list-social-icons mb-0">
+                <li class="list-inline-item">
+                    <a href="https://www.kaggle.com/START-UMD/gtd">
+                <span class="fa-stack fa-lg">
+                  <i class="fa fa-circle fa-stack-2x"></i>
+                  <i class="fa fa-database fa-stack-1x fa-inverse"></i>
+                </span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </section class="resume-section p-3 p-lg-5 d-flex d-column">
+
+    <section class="resume-section p-3 p-lg-5 d-flex flex-column" id="mapa">
+        <div class="my-auto">
+            <h2 class="mb-5">mapa</h2>
+
+            <div class="resume-item d-flex flex-column flex-md-row mb-5">
+                <div class="resume-content mr-auto">
+                    <h3 class="mb-0">Introdução sobre funcionalidades???</h3>
+                    <div class="subheading mb-3">Intelitec Solutions</div>
+                    <p>texto</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="vista-mapa" style="position: relative; width: 986px; height: 850px;"></div>
+    </section>
+
+    <section class="resume-section p-3 p-lg-5 d-flex flex-column" id="gráfico">
+        <div class="my-auto">
+            <h2 class="mb-5">gráfico</h2>
+
+            <div class="resume-item d-flex flex-column flex-md-row mb-5">
+                <div class="resume-content mr-auto">
+                    <h3 class="mb-0">University of Colorado Boulder</h3>
+                    <div class="subheading mb-3">Bachelor of Science</div>
+                    <div>Computer Science - Web Development Track</div>
+                    <p>GPA: 3.23</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</div>
+<!-- Bootstrap core JavaScript -->
+<script src="vendor/jquery/jquery.min.js"></script>
+<script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+<!-- Plugin JavaScript -->
+<script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+
+<!-- Custom scripts for this template -->
+<script src="js/resume.min.js"></script>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="http://d3js.org/topojson.v1.min.js"></script>
+<!-- I recommend you host this file on your own, since this will change without warning -->
+<script src="http://datamaps.github.io/scripts/datamaps.world.min.js?v=1"></script>
+
+<script>
+  function processCountryNames(name){
+    switch (name) {
+      case "United States":
+        return "United States of America";
+        break;
+      case "Slovak Republic":
+        return "Slovakia";
+        break;
+      case "Tanzania":
+        return "United Republic of Tanzania";
+        break;
+      case "Guinea-Bissau":
+        return "Guinea Bissau";
+        break;
+      case "Serbia":
+        return "Republic of Serbia";
+        break;
+      case "Bosnia-Herzegovina":
+        return "Bosnia and Herzegovina";
+        break;
+      case "Kosovo":
+        return "Kosovo";
+        break;
+      case "Bahamas":
+        return "The Bahamas";
+        break;
+      default:
+        return name;
+    }
+  }
+
+  function palette(min, max) {
+  var d = (max-min)/10;
+  return d3.scale.threshold()
+      .range(['#58fa58','#a3fe30','#d5ff00','#ffff00','#ffc400','#ff8900','#ff4000','#ff2200','#d70002','#8b0000'])
+      .domain([min+1*d,min+2*d,min+3*d,min+4*d,min+5*d,min+6*d,min+7*d,min+8*d,min+9*d,min+10*d]);
+  }
+  function decodeColor(colorCode) {
+    return colorCode.replace("$", "#");
+  }
+
+  function codeColor(colorCode) {
+    return colorCode.replace("#", "$");
+  }
+
+</script>
+
+<script>
+        var terroristData = {}
+        var countries = Datamap.prototype.worldTopo.objects.world.geometries;
+        var mapColors = {}
+        var minAtacks = Number.MAX_SAFE_INTEGER;
+        var maxAtacks = 0;
+        d3.csv("relevant_terrorist.csv", function(data){
+        data.forEach(function(element) {
+        if(terroristData[processCountryNames(element.country_txt)] == null){
+
+          terroristData[processCountryNames(element.country_txt)] = [element];
+        }
+        else{
+          terroristData[processCountryNames(element.country_txt)].push(element);
+          var nrAtacks = terroristData[processCountryNames(element.country_txt)].length
+          if(nrAtacks > maxAtacks){
+            maxAtacks = nrAtacks;
+          }
+          if(nrAtacks < minAtacks){
+            minAtacks = nrAtacks;
+          }
+        }
+        });
+        console.log(terroristData);
+        var colorPicker = palette(minAtacks, maxAtacks+1);
+        for (var i = 0, j = countries.length; i < j; i++) {
+            //console.log(countries[i].properties.name);
+            //console.log(terroristData[countries[i].properties.name]);
+            if(terroristData[countries[i].properties.name] != null){
+               mapColors[countries[i].id] = {
+                fillKey: codeColor(colorPicker(terroristData[countries[i].properties.name].length))
+              }
+            }
+            else{
+             mapColors[countries[i].id] = {fillKey: 'noData'}
+            }
+
+        }
+        var points = [
+            {"radius": 10, "fillKey": "pnt", "latitude": 41.89, "longitude": -88.31},
+            {"radius": 10, "fillKey": "pnt", "latitude": 40.113, "longitude": -88.261},
+            {"radius": 10, "fillKey": "pnt", "latitude": 25.7877, "longitude": -80.2241}
+        ];
+
+        var map = new Datamap({
+            scope: 'world',
+            element: document.getElementById('vista-mapa'),
+            projection: 'mercator',
+            fills: {
+                 noData: '#6E6E6E',
+                 $58fa58: '#58fa58',
+                 $a3fe30:'#a3fe30',
+                 $d5ff00: '#d5ff00',
+                 $ffff00: '#ffff00',
+                 $ffc400: '#ffc400',
+                 $ff8900: '#ff8900',
+                 $ff4000: '#ff4000',
+                 $ff2200: '#ff2200',
+                 $d70002: '#d70002',
+                 $8b0000: '#8b0000'
+               },
+            data: mapColors
+        });
+        map.bubbles(points, {
+            fillOpacity: 1.0,
+            borderWidth: 0,
+            popupOnHover: false,
+            highlightOnHover: false
+        });
+    });
+
+
+</script>
+
+</body>
+
+</html>
