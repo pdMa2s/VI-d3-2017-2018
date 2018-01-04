@@ -154,45 +154,85 @@
     var terroristData = {};
     var countries = Datamap.prototype.worldTopo.objects.world.geometries;
     var mapColors = {};
+    var points1 = [];
+    var year = 2014;
 
     d3.csv("relevant_terrorist.csv", function (data) {
         data.forEach(function (element) {
             terroristData[processCountryNames(element.country_txt)] = element;
+            if (element.latitude !== ""
+                && element.longitude !== ""
+                && element.nkill !== "" && element.nkill > 0.0) {
+
+                var deaths = parseFloat(element.nkill);
+
+                var fill = 'pnt';
+                var raio = 1;
+
+                if (deaths >= 1 && deaths <= 100) {
+                    raio = 5.5;
+                }
+
+                if (deaths >= 101 && deaths <= 300) {
+                    raio = 10;
+                }
+
+                else if (deaths >= 301 && deaths <= 601) {
+                    raio = 15;
+                }
+
+                else if (deaths >= 602 && deaths <= 902) {
+                    raio = 20;
+                }
+
+                else if (deaths >= 903 && deaths <= 1200) {
+                    raio = 25;
+                }
+
+                else if (deaths > 1200){
+                    raio = 30;
+                }
+
+                points1.push({
+                    latitude: element.latitude,
+                    longitude: element.longitude,
+                    fillKey: fill, "radius": raio, 'nkills': deaths
+                });
+            }
+
+            // mostrar os que nao têm info??
         });
+        console.log("POINTS1");
+        console.log(points1);
+
         console.log(terroristData);
         for (var i = 0, j = countries.length; i < j; i++) {
             console.log(countries[i].properties.name);
-            //console.log(terroristData[countries[i].properties.name]);
             if (terroristData[countries[i].properties.name] != null) {
-                mapColors[countries[i].id] = {fillKey: 'red'}
+                mapColors[countries[i].id] = {fillKey: 'red'};
             }
             else {
                 mapColors[countries[i].id] = {fillKey: 'noData'}
             }
-
         }
-        var points = [
-            {"radius": 10, "fillKey": "pnt", "latitude": 41.89, "longitude": -88.31},
-            {"radius": 10, "fillKey": "pnt", "latitude": 40.113, "longitude": -88.261},
-            {"radius": 10, "fillKey": "pnt", "latitude": 25.7877, "longitude": -80.2241}
-        ];
 
         var map = new Datamap({
             scope: 'world',
             element: document.getElementById('vista-mapa'),
             projection: 'mercator',
             fills: {
-                'pnt': "#447ee6",
-                defaultFill: '#f0a0fa',
+                'pnt': 'red',
                 noData: '#6E6E6E',
-                blue: 'blue',
-                red: 'red'
+                //red: 'red'
+                red: '#ABDDA4'
             },
             data: mapColors
         });
-        map.bubbles(points, {
-            fillOpacity: 1.0,
-            borderWidth: 0,
+
+        map.bubbles(points1, {
+            fillOpacity: 0.5,
+            borderWidth: 1,
+            borderColor: '#990000',
             popupOnHover: false,
             highlightOnHover: false
         });
