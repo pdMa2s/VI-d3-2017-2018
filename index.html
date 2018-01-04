@@ -21,14 +21,16 @@
     <link href="vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet">
     <link href="vendor/devicons/css/devicons.min.css" rel="stylesheet">
     <link href="vendor/simple-line-icons/css/simple-line-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css">
+
 
     <!-- Custom styles for this template -->
-    <link href="css/resume.min.css" rel="stylesheet">
+    <link href="css/resume.css" rel="stylesheet">
+
 
 </head>
 
 <body id="page-top">
-
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top" id="sideNav" style="width: 150px">
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav">
@@ -72,7 +74,7 @@
                 </li>
             </ul>
         </div>
-    </section class="resume-section p-3 p-lg-5 d-flex d-column">
+    </section>
 
     <section class="resume-section p-3 p-lg-5 d-flex flex-column" id="mapa">
         <div class="my-auto">
@@ -86,8 +88,13 @@
                 </div>
             </div>
         </div>
-
-        <div id="vista-mapa" style="position: relative; width: 986px; height: 850px;"></div>
+        <div style="width: 100%; display: flex">
+            <div id="vista-mapa" style="position: relative; width: 986px; height: 850px; float: left"></div>
+            <div id="slider" name="slider" style="margin-left: 10px; height: 850px;"></div>
+            <input type="text" class="min date" id="min" value="1800" readonly>
+            <input type="text" class="max date" id="max" value="2015" readonly>
+        </div>
+        <div id="vista-mapa2" style="position: relative; width: 986px; height: 850px;"></div>
     </section>
 
     <section class="resume-section p-3 p-lg-5 d-flex flex-column" id="gráfico">
@@ -119,6 +126,9 @@
 <script src="http://d3js.org/topojson.v1.min.js"></script>
 <!-- I recommend you host this file on your own, since this will change without warning -->
 <script src="http://datamaps.github.io/scripts/datamaps.world.min.js?v=1"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+
 
 <script>
     function processCountryNames(name) {
@@ -144,29 +154,47 @@
             case "Kosovo":
                 return "Kosovo";
                 break;
+            case "Bahamas":
+                return "The Bahamas";
+                break;
             default:
                 return name;
         }
     }
+
+    function palette(min, max) {
+        var d = (max - min) / 10;
+        return d3.scale.threshold()
+            .range(['#58fa58', '#a3fe30', '#d5ff00', '#ffff00', '#ffc400', '#ff8900', '#ff4000', '#ff2200', '#d70002', '#8b0000'])
+            .domain([min + d, min + 2 * d, min + 3 * d, min + 4 * d, min + 5 * d, min + 6 * d, min + 7 * d, min + 8 * d, min + 9 * d, min + 10 * d]);
+    }
+
+    function decodeColor(colorCode) {
+        return colorCode.replace("$", "#");
+    }
+
+    function codeColor(colorCode) {
+        return colorCode.replace("#", "$");
+    }
+
 </script>
 
 <script>
+    var map1;
+    var map2;
     var terroristData = {};
     var countries = Datamap.prototype.worldTopo.objects.world.geometries;
     var mapColors = {};
-    var points1 = [];
-    var year = 2014;
+    var points = [];
+    var filteredPoints;
+    var years = [2016];
+    var minAtacks = Number.MAX_SAFE_INTEGER;
+    var maxAtacks = 0;
 
     d3.csv("relevant_terrorist.csv", function (data) {
         data.forEach(function (element) {
-            terroristData[processCountryNames(element.country_txt)] = element;
-            if (element.latitude !== ""
-                && element.longitude !== ""
-                && element.nkill !== "" && element.nkill > 0.0) {
-
+            if (element.latitude !== "" && element.longitude !== "" && element.nkill !== "" && element.nkill > 0.0) {
                 var deaths = parseFloat(element.nkill);
-
-                var fill = 'pnt';
                 var raio = 1;
 
                 if (deaths >= 1 && deaths <= 100) {
@@ -189,47 +217,99 @@
                     raio = 25;
                 }
 
-                else if (deaths > 1200){
+                else if (deaths > 1200) {
                     raio = 30;
                 }
 
-                points1.push({
+                points.push({
+                    year: parseInt(element.iyear),
                     latitude: element.latitude,
                     longitude: element.longitude,
-                    fillKey: fill, "radius": raio, 'nkills': deaths
+                    fillKey: 'pnt',
+                    radius: raio,
+                    nkills: deaths
                 });
             }
 
-            // mostrar os que nao têm info??
-        });
-        console.log("POINTS1");
-        console.log(points1);
+            if (terroristData[processCountryNames(element.country_txt)] == null) {
+                terroristData[processCountryNames(element.country_txt)] = [element];
+            }
 
-        console.log(terroristData);
+            else {
+                terroristData[processCountryNames(element.country_txt)].push(element);
+                var nrAtacks = terroristData[processCountryNames(element.country_txt)].length;
+                if (nrAtacks > maxAtacks) {
+                    maxAtacks = nrAtacks;
+                }
+                if (nrAtacks < minAtacks) {
+                    minAtacks = nrAtacks;
+                }
+            }
+        });
+
+        var colorPicker = palette(minAtacks, maxAtacks + 1);
         for (var i = 0, j = countries.length; i < j; i++) {
             console.log(countries[i].properties.name);
             if (terroristData[countries[i].properties.name] != null) {
                 mapColors[countries[i].id] = {fillKey: 'red'};
-            }
-            else {
-                mapColors[countries[i].id] = {fillKey: 'noData'}
+                if (terroristData[countries[i].properties.name] != null) {
+                    mapColors[countries[i].id] = {
+                        fillKey: codeColor(colorPicker(terroristData[countries[i].properties.name].length))
+                    }
+                }
+                else {
+                    mapColors[countries[i].id] = {fillKey: 'noData'}
+                }
             }
         }
 
-        var map = new Datamap({
+        map1 = new Datamap({
+            scope: 'world',
+            element: document.getElementById('vista-mapa2'),
+            projection: 'mercator',
+            fills: {
+                noData: '#6E6E6E',
+                $58fa58: '#58fa58',
+                $a3fe30: '#a3fe30',
+                $d5ff00: '#d5ff00',
+                $ffff00: '#ffff00',
+                $ffc400: '#ffc400',
+                $ff8900: '#ff8900',
+                $ff4000: '#ff4000',
+                $ff2200: '#ff2200',
+                $d70002: '#d70002',
+                $8b0000: '#8b0000'
+            },
+            data: mapColors
+        });
+
+        map2 = new Datamap({
             scope: 'world',
             element: document.getElementById('vista-mapa'),
             projection: 'mercator',
             fills: {
                 'pnt': 'red',
                 noData: '#6E6E6E',
-                //red: 'red'
-                red: '#ABDDA4'
+                $58fa58: '#58fa58',
+                $a3fe30: '#a3fe30',
+                $d5ff00: '#d5ff00',
+                $ffff00: '#ffff00',
+                $ffc400: '#ffc400',
+                $ff8900: '#ff8900',
+                $ff4000: '#ff4000',
+                $ff2200: '#ff2200',
+                $d70002: '#d70002',
+                $8b0000: '#8b0000',
+                green: '#ABDDA4'
             },
             data: mapColors
         });
 
-        map.bubbles(points1, {
+        filteredPoints = points.filter(function (el) {
+            return years.includes(parseInt(el.year));
+        });
+
+        map2.bubbles(filteredPoints, {
             fillOpacity: 0.5,
             borderWidth: 1,
             borderColor: '#990000',
@@ -238,7 +318,31 @@
         });
     });
 
+    $min_input = $('#min');
+    $max_input = $('#max');
 
+    $slider = $('#slider').slider({
+        orientation: 'vertical',
+        animate: "fast",
+        range: true,
+        min: 1970,
+        max: 2016,
+        values: [2015, 2016],
+        slide: function(event, ui) {
+            adjust(ui.values[0], ui.values[1]);
+        }
+    });
+
+    function adjust(min, max) {
+        $min_input.val(min);
+        $max_input.val(max);
+        $slider.find('.ui-slider-handle:first-of-type').attr('data-content',min);
+        $slider.find('.ui-slider-handle:last-of-type').attr('data-content',max);
+    }
+
+    var min = $slider.slider('values', 0);
+    var max = $slider.slider('values', 1);
+    adjust(min, max);
 </script>
 
 </body>
