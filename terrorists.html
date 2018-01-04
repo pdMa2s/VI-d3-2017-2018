@@ -32,27 +32,62 @@
         case "Kosovo":
           return "Kosovo";
           break;
+        case "Bahamas":
+          return "The Bahamas";
+          break;
         default:
           return name;
       }
     }
+
+    function palette(min, max) {
+    var d = (max-min)/10;
+    return d3.scale.threshold()
+        .range(['#58fa58','#a3fe30','#d5ff00','#ffff00','#ffc400','#ff8900','#ff4000','#ff2200','#d70002','#8b0000'])
+        .domain([min+1*d,min+2*d,min+3*d,min+4*d,min+5*d,min+6*d,min+7*d,min+8*d,min+9*d,min+10*d]);
+    }
+    function decodeColor(colorCode) {
+      return colorCode.replace("$", "#");
+    }
+
+    function codeColor(colorCode) {
+      return colorCode.replace("#", "$");
+    }
+
   </script>
 
      <script>
      var terroristData = {}
      var countries = Datamap.prototype.worldTopo.objects.world.geometries;
      var mapColors = {}
-
+     var minAtacks = Number.MAX_SAFE_INTEGER;
+     var maxAtacks = 0;
      d3.csv("relevant_terrorist.csv", function(data){
        data.forEach(function(element) {
-         terroristData[processCountryNames(element.country_txt)] = element;
+         if(terroristData[processCountryNames(element.country_txt)] == null){
+
+            terroristData[processCountryNames(element.country_txt)] = [element];
+          }
+        else{
+            terroristData[processCountryNames(element.country_txt)].push(element);
+            var nrAtacks = terroristData[processCountryNames(element.country_txt)].length
+            if(nrAtacks > maxAtacks){
+              maxAtacks = nrAtacks;
+            }
+            if(nrAtacks < minAtacks){
+              minAtacks = nrAtacks;
+            }
+        }
        });
        console.log(terroristData);
+       var colorPicker = palette(minAtacks, maxAtacks+1);
        for (var i = 0, j = countries.length; i < j; i++) {
-         console.log(countries[i].properties.name);
+         //console.log(countries[i].properties.name);
          //console.log(terroristData[countries[i].properties.name]);
          if(terroristData[countries[i].properties.name] != null){
-            mapColors[countries[i].id] = {fillKey: 'red'}
+             mapColors[countries[i].id] = {
+              fillKey: codeColor(colorPicker(terroristData[countries[i].properties.name].length))
+            }
          }
          else{
            mapColors[countries[i].id] = {fillKey: 'noData'}
@@ -65,10 +100,17 @@
          projection: 'mercator',
          height: 500,
          fills: {
-           defaultFill: '#f0a0fa',
            noData: '#6E6E6E',
-           blue: 'blue',
-           red: 'red'
+           $58fa58: '#58fa58',
+           $a3fe30:'#a3fe30',
+           $d5ff00: '#d5ff00',
+           $ffff00: '#ffff00',
+           $ffc400: '#ffc400',
+           $ff8900: '#ff8900',
+           $ff4000: '#ff4000',
+           $ff2200: '#ff2200',
+           $d70002: '#d70002',
+           $8b0000: '#8b0000'
          },
          data : mapColors
         });
