@@ -165,7 +165,16 @@
   function codeColor(colorCode) {
     return colorCode.replace("#", "$");
   }
-
+  function getAttackArray(yearAtacks){
+    var atackArray = [];
+    for (var property in yearAtacks) {
+        if (yearAtacks.hasOwnProperty(property)) {
+          // do stuff
+          atackArray.push({'year': property, 'nrAttacks': yearAtacks[property]})
+        }
+      }
+      return atackArray;
+  }
 </script>
 <svg width="960" height="500"></svg>
 <script>
