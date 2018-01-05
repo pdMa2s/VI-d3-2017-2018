@@ -38,10 +38,10 @@
                 <a class="nav-link js-scroll-trigger" href="#sobre">Sobre</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link js-scroll-trigger" href="#mapa">Mapa</a>
+                <a class="nav-link js-scroll-trigger" href="#mapa">Mortes?</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link js-scroll-trigger" href="#gráfico">Gráfico</a>
+                <a class="nav-link js-scroll-trigger" href="#grafico">Nº Ataques</a>
             </li>
         </ul>
     </div>
@@ -98,24 +98,30 @@
 
         </div>
 
-
-        <div style="width: 100%; overflow: hidden;">
-            <div id="vista-mapa2" style="position: relative; width: 986px; height: 850px; float: left;"></div>
-
-        </div>
     </section>
 
     <section class="resume-section p-3 p-lg-5 d-flex flex-column" id="grafico">
         <div class="my-auto">
-            <h2 class="mb-5">gráfico</h2>
+            <h2 class="mb-5">Nº de Ataques por país</h2>
 
             <div class="resume-item d-flex flex-column flex-md-row mb-5">
                 <div class="resume-content mr-auto">
-
+                    <h3 class="mb-0"></h3>
+                    <div class="subheading mb-3">Intelitec Solutions</div>
+                    <p>Esta secção apresenta o nº de ataques terroristas
+                    por país através de mapa de codificado por cores consoante o número
+                    de ataques que ocorreu em determinado país. Ao clicar num país
+                    pode de seguida observar a evolução de número de ataques ao longo
+                    do tempo através do gráfico.</p>
                 </div>
             </div>
+        <div style="width: 100%; overflow: hidden;">
+            <div id="vista-mapa2" style="position: relative; width: 800px; height: 650px; float: left;"></div>
+        </div>
 
         <div id="chartDiv">
+            <div class="subheading mb-3" id="divSelectedCountry"></div>
+
             <svg width="500" height="300"></svg>
 
         </div>
@@ -177,7 +183,7 @@
         var d = (max - min) / 10;
         return d3.scale.threshold()
             .range(['#58fa58', '#a3fe30', '#d5ff00', '#ffff00', '#ffc400', '#ff8900', '#ff4000', '#ff2200', '#d70002', '#8b0000'])
-            .domain([min + 100, min + 2 * 750, min + 3 * d, min + 4 * d, min + 5 * d, min + 6 * d, min + 7 * d, min + 8 * d, min + 9 * d, min + 10 * d]);
+            .domain([min + 15, min + 2 * 100, min + 3 * 500, min + 4 * 1500, min + 5 * 2000, min + 6 * d, min + 7 * d, min + 8 * d, min + 9 * 2750, min + 10 * 3000]);
     }
 
     function decodeColor(colorCode) {
@@ -297,10 +303,10 @@
         }
         //######chart###########3
         var selectedCountry = "Afghanistan";
-
+        document.getElementById('divSelectedCountry').innerHTML = selectedCountry;
         var margin = {top: 20, right: 20, bottom: 30, left: 80},
-        width =  600 + margin.left - margin.right,
-        height = 270 + margin.top - margin.bottom;
+        width =  500 + margin.left - margin.right,
+        height = 300 + margin.top - margin.bottom;
         var svg = d3.select("svg")
             //.append("svg")
             .attr("width", width + margin.left + margin.right)
@@ -332,6 +338,10 @@
               .attr("class", "yAxis")
               .call(yAxis)
               .append("text")
+              .attr("fill", "#000")
+              .attr("y", 6)
+              .attr("dy", "0.71em")
+              .attr("transform", "rotate(-90)")
               .attr("text-anchor", "end")
               .text("Nº Attacks");
 
@@ -376,6 +386,7 @@
                 datamap.svg.selectAll('.datamaps-subunit').on('click', function(geo) {
 
                 selectedCountry = geo.properties.name;
+                document.getElementById('divSelectedCountry').innerHTML = selectedCountry;
                 updateData(getAttackArray(countryAtacks[geo.properties.name]))
               })
             }
@@ -385,7 +396,6 @@
 
               // ** Update data section (Called from the onclick)
               function updateData(updateData) {
-                  console.log(updateData);
 
                   // Select the section we want to apply our changes to
                   svg.selectAll("*").remove();
@@ -411,12 +421,16 @@
                     .call(xAxis)
                     //.remove();
               var yAxis = d3.svg.axis().orient("left").scale(y);
-                svg.append("g")
-                    .attr("class", "yAxis")
-                    .call(yAxis)
-                    .append("text")
-                    .attr("text-anchor", "end")
-                    .text("Nº Attacks");
+              svg.append("g")
+                  .attr("class", "yAxis")
+                  .call(yAxis)
+                  .append("text")
+                  .attr("fill", "#000")
+                  .attr("y", 6)
+                  .attr("dy", "0.71em")
+                  .attr("transform", "rotate(-90)")
+                  .attr("text-anchor", "end")
+                  .text("Nº Attacks");
 
                 svg.append("path")
                     .attr("class", "chartLine")
