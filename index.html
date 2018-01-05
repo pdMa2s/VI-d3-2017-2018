@@ -101,7 +101,7 @@
 
         <div style="width: 100%; overflow: hidden;">
             <div id="vista-mapa2" style="position: relative; width: 986px; height: 850px; float: left;"></div>
-            <button id="zoom-button-2", class="zoom-button" data-zoom="reset">Reset zoom</button>
+
         </div>
     </section>
 
@@ -111,10 +111,7 @@
 
             <div class="resume-item d-flex flex-column flex-md-row mb-5">
                 <div class="resume-content mr-auto">
-                    <h3 class="mb-0">University of Colorado Boulder</h3>
-                    <div class="subheading mb-3">Bachelor of Science</div>
-                    <div>Computer Science - Web Development Track</div>
-                    <p>GPA: 3.23</p>
+
                 </div>
             </div>
 
@@ -180,7 +177,7 @@
         var d = (max - min) / 10;
         return d3.scale.threshold()
             .range(['#58fa58', '#a3fe30', '#d5ff00', '#ffff00', '#ffc400', '#ff8900', '#ff4000', '#ff2200', '#d70002', '#8b0000'])
-            .domain([min + d, min + 2 * d, min + 3 * d, min + 4 * d, min + 5 * d, min + 6 * d, min + 7 * d, min + 8 * d, min + 9 * d, min + 10 * d]);
+            .domain([min + 100, min + 2 * 750, min + 3 * d, min + 4 * d, min + 5 * d, min + 6 * d, min + 7 * d, min + 8 * d, min + 9 * d, min + 10 * d]);
     }
 
     function decodeColor(colorCode) {
@@ -208,7 +205,7 @@
     var terroristData = {};
     var countryAtacks = {};
     var countries = Datamap.prototype.worldTopo.objects.world.geometries;
-    var mapColors = {};
+    var mapData = {};
     var points = [];
     var filteredPoints;
     var minAtacks = Number.MAX_SAFE_INTEGER;
@@ -216,11 +213,6 @@
     var zoom1;
     var zoom2;
     var scale = 1.0;
-
-    //######chart#######
-
-    //######chart#######
-
 
     d3.csv("relevant_terrorist.csv", function (data) {
         data.forEach(function (element) {
@@ -290,15 +282,22 @@
         var colorPicker = palette(minAtacks, maxAtacks + 1);
         for (var i = 0, j = countries.length; i < j; i++) {
             if (terroristData[countries[i].properties.name] != null) {
-                mapColors[countries[i].id] = {
-                    fillKey: codeColor(colorPicker(terroristData[countries[i].properties.name].length))
+                let cNrAttacks = terroristData[countries[i].properties.name].length;
+                mapData[countries[i].id] = {
+                    attacks : cNrAttacks,
+                    fillKey: codeColor(colorPicker(cNrAttacks))
                 }
             }
             else {
-                mapColors[countries[i].id] = {fillKey: 'noData'}
+                mapData[countries[i].id] = {
+                    attacks : "N/a",
+                    fillKey: 'noData'
+                }
             }
         }
         //######chart###########3
+        var selectedCountry = "Afghanistan";
+
         var margin = {top: 20, right: 20, bottom: 30, left: 80},
         width =  600 + margin.left - margin.right,
         height = 270 + margin.top - margin.bottom;
@@ -317,7 +316,9 @@
         var valueLine = d3.svg.line()
             .x(function(d) { return x(d.year); })
             .y(function(d) { return y(d.nrAttacks);});
-        var atacksYear = getAttackArray(countryAtacks['Afghanistan']);
+
+        var atacksYear = getAttackArray(countryAtacks[selectedCountry]);
+
           x.domain(d3.extent(atacksYear, function(d) { return d.year; }));
           y.domain(d3.extent(atacksYear, function(d) { return d.nrAttacks; }));
           var xAxis = d3.svg.axis().orient("bottom").scale(x);
@@ -344,11 +345,12 @@
               .attr("d", valueLine(atacksYear));
         var svgUpdate = d3.select("svg").select("g").transition();
 
-        var selectedCountry = "";
         map1 = new Datamap({
             scope: 'world',
             element: document.getElementById('vista-mapa2'),
             projection: 'mercator',
+            legend: true,
+            labels: true,
             fills: {
                 noData: '#6E6E6E',
                 $58fa58: '#58fa58',
@@ -362,16 +364,17 @@
                 $d70002: '#d70002',
                 $8b0000: '#8b0000'
             },
-            data: mapColors,
+            data: mapData,
+            geographyConfig: {
+                 popupTemplate:  function(geography, data){
+                    return '<div class=hoverinfo><strong>' + geography.properties.name +
+                      '<br />' + "Ataques: " + data.attacks + '</strong></div>';
+                  }
+                },
             done: function(datamap) {
-                zoom1 = d3.behavior.zoom();
-                datamap.svg.call(zoom1.on("zoom", redraw));
-                function redraw() {
-                    datamap.svg.selectAll("g").attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
-                }
 
                 datamap.svg.selectAll('.datamaps-subunit').on('click', function(geo) {
-                alert(geo.properties.name);
+
                 selectedCountry = geo.properties.name;
                 updateData(getAttackArray(countryAtacks[geo.properties.name]))
               })
@@ -383,24 +386,47 @@
               // ** Update data section (Called from the onclick)
               function updateData(updateData) {
                   console.log(updateData);
-                  	// Scale the range of the data again
-                    x.domain(d3.extent(updateData, function(d) { return d.year; }));
-                    y.domain(d3.extent(updateData, function(d) { return d.nrAttacks; }));
 
                   // Select the section we want to apply our changes to
+                  svg.selectAll("*").remove();
 
-                  console.log(svgUpdate);
-                  console.log(svg);
-                  // Make the changes
-                      svgUpdate.select(".chartLine")   // change the line
-                          .duration(750)
-                          .attr("path", valueLine(updateData));
-                      svgUpdate.select(".xAxis") // change the x axis
-                          .duration(750)
-                          .call(xAxis);
-                      svgUpdate.select(".yAxis") // change the y axis
-                          .duration(750)
-                          .call(yAxis);
+                  svg.attr("width", width + margin.left + margin.right)
+                  .attr("height", height + margin.top + margin.bottom)
+                  .append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+              var x = d3.scale.linear().range([0, width]);
+
+              var y = d3.scale.linear().range([height, 0]);
+
+              var valueLine = d3.svg.line()
+                  .x(function(d) { return x(d.year); })
+                  .y(function(d) { return y(d.nrAttacks);});
+              //var atacksYear = getAttackArray(countryAtacks['Afghanistan']);
+                x.domain(d3.extent(updateData, function(d) { return d.year; }));
+                y.domain(d3.extent(updateData, function(d) { return d.nrAttacks; }));
+                var xAxis = d3.svg.axis().orient("bottom").scale(x);
+                svg.append("g")
+                    .attr("class", "xAxis")
+                    .attr("transform", "translate(0," + height + ")")
+                    .call(xAxis)
+                    //.remove();
+              var yAxis = d3.svg.axis().orient("left").scale(y);
+                svg.append("g")
+                    .attr("class", "yAxis")
+                    .call(yAxis)
+                    .append("text")
+                    .attr("text-anchor", "end")
+                    .text("Nº Attacks");
+
+                svg.append("path")
+                    .attr("class", "chartLine")
+                    .attr("fill", "none")
+                    .attr("stroke", "steelblue")
+                    .attr("stroke-linejoin", "round")
+                    .attr("stroke-linecap", "round")
+                    .attr("stroke-width", 3)
+                    .attr("d", valueLine(updateData));
+
 
               }
              //######chart###########3
@@ -423,7 +449,7 @@
                 $d70002: '#ABDDA4',
                 $8b0000: '#ABDDA4'
             },
-            data: mapColors,
+            data: mapData,
             done: function(datamap) {
                 zoom2 = d3.behavior.zoom();
                 datamap.svg.call(zoom2.on("zoom", redraw));
