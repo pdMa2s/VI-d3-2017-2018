@@ -105,7 +105,7 @@
         </div>
     </section>
 
-    <section class="resume-section p-3 p-lg-5 d-flex flex-column" id="gráfico">
+    <section class="resume-section p-3 p-lg-5 d-flex flex-column" id="grafico">
         <div class="my-auto">
             <h2 class="mb-5">gráfico</h2>
 
@@ -117,10 +117,15 @@
                     <p>GPA: 3.23</p>
                 </div>
             </div>
+
+        <div id="chartDiv">
+            <svg width="500" height="300"></svg>
+
+        </div>
         </div>
     </section>
 
-</div>
+
 <!-- Bootstrap core JavaScript -->
 <script src="vendor/jquery/jquery.min.js"></script>
 <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
@@ -197,7 +202,6 @@
       return atackArray;
   }
 </script>
-<svg width="960" height="500"></svg>
 <script>
     var map1;
     var map2;
@@ -214,21 +218,7 @@
     var scale = 1.0;
 
     //######chart#######
-    var svg = d3.select("svg"),
-        margin = {top: 20, right: 20, bottom: 30, left: 50},
-        width = +svg.attr("width") - margin.left - margin.right,
-        height = +svg.attr("height") - margin.top - margin.bottom,
-        g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-    var x = d3.time.scale()
-        .rangeRound([0, width]);
-
-    var y = d3.scale.linear()
-        .rangeRound([height, 0]);
-
-    var line = d3.svg.line()
-        .x(function(d) { return x(d.year); })
-        .y(function(d) { return y(d.nrAttacks);});
     //######chart#######
 
 
@@ -308,6 +298,51 @@
                 mapColors[countries[i].id] = {fillKey: 'noData'}
             }
         }
+        //######chart###########3
+        var margin = {top: 20, right: 20, bottom: 30, left: 80},
+        width =  600 + margin.left - margin.right,
+        height = 270 + margin.top - margin.bottom;
+        var svg = d3.select("svg")
+            //.append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
+
+        var x = d3.scale.linear().range([0, width]);
+
+        var y = d3.scale.linear().range([height, 0]);
+
+        var valueLine = d3.svg.line()
+            .x(function(d) { return x(d.year); })
+            .y(function(d) { return y(d.nrAttacks);});
+        var atacksYear = getAttackArray(countryAtacks['Afghanistan']);
+          x.domain(d3.extent(atacksYear, function(d) { return d.year; }));
+          y.domain(d3.extent(atacksYear, function(d) { return d.nrAttacks; }));
+          var xAxis = d3.svg.axis().orient("bottom").scale(x);
+          svg.append("g")
+              .attr("class", "xAxis")
+              .attr("transform", "translate(0," + height + ")")
+              .call(xAxis)
+              //.remove();
+        var yAxis = d3.svg.axis().orient("left").scale(y);
+          svg.append("g")
+              .attr("class", "yAxis")
+              .call(yAxis)
+              .append("text")
+              .attr("text-anchor", "end")
+              .text("Nº Attacks");
+
+          svg.append("path")
+              .attr("class", "chartLine")
+              .attr("fill", "none")
+              .attr("stroke", "steelblue")
+              .attr("stroke-linejoin", "round")
+              .attr("stroke-linecap", "round")
+              .attr("stroke-width", 3)
+              .attr("d", valueLine(atacksYear));
+        var svgUpdate = d3.select("svg").select("g").transition();
 
         var selectedCountry = "";
         map1 = new Datamap({
@@ -343,35 +378,6 @@
             }
         });
 
-        //######chart###########3
-        var atacksYear = getAttackArray(countryAtacks['Afghanistan']);
-          x.domain(d3.extent(atacksYear, function(d) { return d.year; }));
-          y.domain(d3.extent(atacksYear, function(d) { return d.nrAttacks; }));
-          var xAxis = d3.svg.axis().orient("bottom").scale(x);
-          g.append("g")
-              .attr("transform", "translate(0," + height + ")")
-              .call(xAxis)
-              .select(".domain")
-              //.remove();
-        var yAxis = d3.svg.axis().orient("left").scale(y);
-          g.append("g")
-              .call(yAxis)
-            .append("text")
-              .attr("fill", "#000")
-              .attr("transform", "rotate(-90)")
-              .attr("y", 6)
-              .attr("dy", "0.71em")
-              .attr("text-anchor", "end")
-              .text("Nº Attacks");
-
-          g.append("path")
-              .datum(atacksYear)
-              .attr("fill", "none")
-              .attr("stroke", "steelblue")
-              .attr("stroke-linejoin", "round")
-              .attr("stroke-linecap", "round")
-              .attr("stroke-width", 3)
-              .attr("d", line);
 
 
               // ** Update data section (Called from the onclick)
@@ -382,20 +388,20 @@
                     y.domain(d3.extent(updateData, function(d) { return d.nrAttacks; }));
 
                   // Select the section we want to apply our changes to
-                  var svg = d3.select("vista-mapa2").transition();
-                  line = d3.svg.line()
-                      .x(function(d) { return x(d.year); })
-                      .y(function(d) { return y(d.nrAttacks);});
+
+                  console.log(svgUpdate);
+                  console.log(svg);
                   // Make the changes
-                      svg.select(".line")   // change the line
+                      svgUpdate.select(".chartLine")   // change the line
                           .duration(750)
-                          .attr("d", line);
-                      svg.select(".x.axis") // change the x axis
+                          .attr("path", valueLine(updateData));
+                      svgUpdate.select(".xAxis") // change the x axis
                           .duration(750)
                           .call(xAxis);
-                      svg.select(".y.axis") // change the y axis
+                      svgUpdate.select(".yAxis") // change the y axis
                           .duration(750)
                           .call(yAxis);
+
               }
              //######chart###########3
 
