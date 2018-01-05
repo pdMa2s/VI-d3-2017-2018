@@ -131,6 +131,7 @@
 <!-- Custom scripts for this template -->
 <script src="js/resume.min.js"></script>
 <script src="http://d3js.org/d3.v3.min.js"></script>
+<!-- <script src="https://d3js.org/d3.v4.min.js"></script>-->
 <script src="http://d3js.org/topojson.v1.min.js"></script>
 <!-- I recommend you host this file on your own, since this will change without warning -->
 <script src="http://datamaps.github.io/scripts/datamaps.world.min.js?v=1"></script>
@@ -185,12 +186,23 @@
         return colorCode.replace("#", "$");
     }
 
+  function getAttackArray(yearAtacks){
+    var atackArray = [];
+    for (var property in yearAtacks) {
+        if (yearAtacks.hasOwnProperty(property)) {
+          // do stuff
+          atackArray.push({'year': property, 'nrAttacks': yearAtacks[property]})
+        }
+      }
+      return atackArray;
+  }
 </script>
 <svg width="960" height="500"></svg>
 <script>
     var map1;
     var map2;
     var terroristData = {};
+    var countryAtacks = {};
     var countries = Datamap.prototype.worldTopo.objects.world.geometries;
     var mapColors = {};
     var points = [];
@@ -200,6 +212,25 @@
     var zoom1;
     var zoom2;
     var scale = 1.0;
+
+    //######chart#######
+    var svg = d3.select("svg"),
+        margin = {top: 20, right: 20, bottom: 30, left: 50},
+        width = +svg.attr("width") - margin.left - margin.right,
+        height = +svg.attr("height") - margin.top - margin.bottom,
+        g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    var x = d3.time.scale()
+        .rangeRound([0, width]);
+
+    var y = d3.scale.linear()
+        .rangeRound([height, 0]);
+
+    var line = d3.svg.line()
+        .x(function(d) { return x(d.year); })
+        .y(function(d) { return y(d.nrAttacks);});
+    //######chart#######
+
 
     d3.csv("relevant_terrorist.csv", function (data) {
         data.forEach(function (element) {
@@ -243,6 +274,8 @@
 
             if (terroristData[processCountryNames(element.country_txt)] == null) {
                 terroristData[processCountryNames(element.country_txt)] = [element];
+                countryAtacks[processCountryNames(element.country_txt)] = {};
+                countryAtacks[processCountryNames(element.country_txt)][element.iyear] = 1;
             }
 
             else {
@@ -254,12 +287,18 @@
                 if (nrAtacks < minAtacks) {
                     minAtacks = nrAtacks;
                 }
+                if(countryAtacks[processCountryNames(element.country_txt)][element.iyear] == null){
+                  countryAtacks[processCountryNames(element.country_txt)][element.iyear] = 1;
+                }
+                else{
+                  countryAtacks[processCountryNames(element.country_txt)][element.iyear] =  countryAtacks[processCountryNames(element.country_txt)][element.iyear] + 1;
+                  //console.log(countryAtacks[processCountryNames(element.country_txt)][element.iyear]);
+                }
             }
         });
 
         var colorPicker = palette(minAtacks, maxAtacks + 1);
         for (var i = 0, j = countries.length; i < j; i++) {
-            console.log(countries[i].properties.name);
             if (terroristData[countries[i].properties.name] != null) {
                 mapColors[countries[i].id] = {
                     fillKey: codeColor(colorPicker(terroristData[countries[i].properties.name].length))
@@ -270,6 +309,7 @@
             }
         }
 
+        var selectedCountry = "";
         map1 = new Datamap({
             scope: 'world',
             element: document.getElementById('vista-mapa2'),
@@ -294,8 +334,70 @@
                 function redraw() {
                     datamap.svg.selectAll("g").attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
                 }
+
+                datamap.svg.selectAll('.datamaps-subunit').on('click', function(geo) {
+                alert(geo.properties.name);
+                selectedCountry = geo.properties.name;
+                updateData(getAttackArray(countryAtacks[geo.properties.name]))
+              })
             }
         });
+
+        //######chart###########3
+        var atacksYear = getAttackArray(countryAtacks['Afghanistan']);
+          x.domain(d3.extent(atacksYear, function(d) { return d.year; }));
+          y.domain(d3.extent(atacksYear, function(d) { return d.nrAttacks; }));
+          var xAxis = d3.svg.axis().orient("bottom").scale(x);
+          g.append("g")
+              .attr("transform", "translate(0," + height + ")")
+              .call(xAxis)
+              .select(".domain")
+              //.remove();
+        var yAxis = d3.svg.axis().orient("left").scale(y);
+          g.append("g")
+              .call(yAxis)
+            .append("text")
+              .attr("fill", "#000")
+              .attr("transform", "rotate(-90)")
+              .attr("y", 6)
+              .attr("dy", "0.71em")
+              .attr("text-anchor", "end")
+              .text("Nº Attacks");
+
+          g.append("path")
+              .datum(atacksYear)
+              .attr("fill", "none")
+              .attr("stroke", "steelblue")
+              .attr("stroke-linejoin", "round")
+              .attr("stroke-linecap", "round")
+              .attr("stroke-width", 3)
+              .attr("d", line);
+
+
+              // ** Update data section (Called from the onclick)
+              function updateData(updateData) {
+                  console.log(updateData);
+                  	// Scale the range of the data again
+                    x.domain(d3.extent(updateData, function(d) { return d.year; }));
+                    y.domain(d3.extent(updateData, function(d) { return d.nrAttacks; }));
+
+                  // Select the section we want to apply our changes to
+                  var svg = d3.select("vista-mapa2").transition();
+                  line = d3.svg.line()
+                      .x(function(d) { return x(d.year); })
+                      .y(function(d) { return y(d.nrAttacks);});
+                  // Make the changes
+                      svg.select(".line")   // change the line
+                          .duration(750)
+                          .attr("d", line);
+                      svg.select(".x.axis") // change the x axis
+                          .duration(750)
+                          .call(xAxis);
+                      svg.select(".y.axis") // change the y axis
+                          .duration(750)
+                          .call(yAxis);
+              }
+             //######chart###########3
 
         map2 = new Datamap({
             scope: 'world',
