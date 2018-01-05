@@ -21,14 +21,16 @@
     <link href="vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet">
     <link href="vendor/devicons/css/devicons.min.css" rel="stylesheet">
     <link href="vendor/simple-line-icons/css/simple-line-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css">
+
 
     <!-- Custom styles for this template -->
-    <link href="css/resume.min.css" rel="stylesheet">
+    <link href="css/resume.css" rel="stylesheet">
+
 
 </head>
 
 <body id="page-top">
-
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top" id="sideNav" style="width: 150px">
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav">
@@ -72,7 +74,7 @@
                 </li>
             </ul>
         </div>
-    </section class="resume-section p-3 p-lg-5 d-flex d-column">
+    </section>
 
     <section class="resume-section p-3 p-lg-5 d-flex flex-column" id="mapa">
         <div class="my-auto">
@@ -86,8 +88,13 @@
                 </div>
             </div>
         </div>
-
-        <div id="vista-mapa" style="position: relative; width: 986px; height: 850px;"></div>
+        <div style="width: 100%; display: flex">
+            <div id="vista-mapa" style="position: relative; width: 986px; height: 850px; float: left"></div>
+            <div id="slider" name="slider" style="margin-left: 10px; height: 850px;"></div>
+            <input type="text" class="min date" id="min" value="1800" readonly>
+            <input type="text" class="max date" id="max" value="2015" readonly>
+        </div>
+        <div id="vista-mapa2" style="position: relative; width: 986px; height: 850px;"></div>
     </section>
 
     <section class="resume-section p-3 p-lg-5 d-flex flex-column" id="gráfico">
@@ -116,55 +123,61 @@
 <!-- Custom scripts for this template -->
 <script src="js/resume.min.js"></script>
 <script src="http://d3js.org/d3.v3.min.js"></script>
+<!-- <script src="https://d3js.org/d3.v4.min.js"></script>-->
 <script src="http://d3js.org/topojson.v1.min.js"></script>
 <!-- I recommend you host this file on your own, since this will change without warning -->
 <script src="http://datamaps.github.io/scripts/datamaps.world.min.js?v=1"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+
 
 <script>
-  function processCountryNames(name){
-    switch (name) {
-      case "United States":
-        return "United States of America";
-        break;
-      case "Slovak Republic":
-        return "Slovakia";
-        break;
-      case "Tanzania":
-        return "United Republic of Tanzania";
-        break;
-      case "Guinea-Bissau":
-        return "Guinea Bissau";
-        break;
-      case "Serbia":
-        return "Republic of Serbia";
-        break;
-      case "Bosnia-Herzegovina":
-        return "Bosnia and Herzegovina";
-        break;
-      case "Kosovo":
-        return "Kosovo";
-        break;
-      case "Bahamas":
-        return "The Bahamas";
-        break;
-      default:
-        return name;
+    function processCountryNames(name) {
+        switch (name) {
+            case "United States":
+                return "United States of America";
+                break;
+            case "Slovak Republic":
+                return "Slovakia";
+                break;
+            case "Tanzania":
+                return "United Republic of Tanzania";
+                break;
+            case "Guinea-Bissau":
+                return "Guinea Bissau";
+                break;
+            case "Serbia":
+                return "Republic of Serbia";
+                break;
+            case "Bosnia-Herzegovina":
+                return "Bosnia and Herzegovina";
+                break;
+            case "Kosovo":
+                return "Kosovo";
+                break;
+            case "Bahamas":
+                return "The Bahamas";
+                break;
+            default:
+                return name;
+        }
     }
-  }
 
-  function palette(min, max) {
-  var d = (max-min)/10;
-  return d3.scale.threshold()
-      .range(['#58fa58','#a3fe30','#d5ff00','#ffff00','#ffc400','#ff8900','#ff4000','#ff2200','#d70002','#8b0000'])
-      .domain([min+1*d,min+2*d,min+3*d,min+4*d,min+5*d,min+6*d,min+7*d,min+8*d,min+9*d,min+10*d]);
-  }
-  function decodeColor(colorCode) {
-    return colorCode.replace("$", "#");
-  }
+    function palette(min, max) {
+        var d = (max - min) / 10;
+        return d3.scale.threshold()
+            .range(['#58fa58', '#a3fe30', '#d5ff00', '#ffff00', '#ffc400', '#ff8900', '#ff4000', '#ff2200', '#d70002', '#8b0000'])
+            .domain([min + d, min + 2 * d, min + 3 * d, min + 4 * d, min + 5 * d, min + 6 * d, min + 7 * d, min + 8 * d, min + 9 * d, min + 10 * d]);
+    }
 
-  function codeColor(colorCode) {
-    return colorCode.replace("#", "$");
-  }
+    function decodeColor(colorCode) {
+        return colorCode.replace("$", "#");
+    }
+
+    function codeColor(colorCode) {
+        return colorCode.replace("#", "$");
+    }
+
   function getAttackArray(yearAtacks){
     var atackArray = [];
     for (var property in yearAtacks) {
@@ -178,77 +191,257 @@
 </script>
 <svg width="960" height="500"></svg>
 <script>
-        var terroristData = {}
-        var countries = Datamap.prototype.worldTopo.objects.world.geometries;
-        var mapColors = {}
-        var minAtacks = Number.MAX_SAFE_INTEGER;
-        var maxAtacks = 0;
-        d3.csv("relevant_terrorist.csv", function(data){
-        data.forEach(function(element) {
-        if(terroristData[processCountryNames(element.country_txt)] == null){
+    var map1;
+    var map2;
+    var terroristData = {};
+    var countryAtacks = {};
+    var countries = Datamap.prototype.worldTopo.objects.world.geometries;
+    var mapColors = {};
+    var points = [];
+    var filteredPoints;
+    var years = [2016];
+    var minAtacks = Number.MAX_SAFE_INTEGER;
+    var maxAtacks = 0;
 
-          terroristData[processCountryNames(element.country_txt)] = [element];
-        }
-        else{
-          terroristData[processCountryNames(element.country_txt)].push(element);
-          var nrAtacks = terroristData[processCountryNames(element.country_txt)].length
-          if(nrAtacks > maxAtacks){
-            maxAtacks = nrAtacks;
-          }
-          if(nrAtacks < minAtacks){
-            minAtacks = nrAtacks;
-          }
-        }
+    //######chart#######
+    var svg = d3.select("svg"),
+        margin = {top: 20, right: 20, bottom: 30, left: 50},
+        width = +svg.attr("width") - margin.left - margin.right,
+        height = +svg.attr("height") - margin.top - margin.bottom,
+        g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    var x = d3.time.scale()
+        .rangeRound([0, width]);
+
+    var y = d3.scale.linear()
+        .rangeRound([height, 0]);
+
+    var line = d3.svg.line()
+        .x(function(d) { return x(d.year); })
+        .y(function(d) { return y(d.nrAttacks);});
+    //######chart#######
+
+
+    d3.csv("relevant_terrorist.csv", function (data) {
+        data.forEach(function (element) {
+            if (element.latitude !== "" && element.longitude !== "" && element.nkill !== "" && element.nkill > 0.0) {
+                var deaths = parseFloat(element.nkill);
+                var raio = 1;
+
+                if (deaths >= 1 && deaths <= 100) {
+                    raio = 5.5;
+                }
+
+                if (deaths >= 101 && deaths <= 300) {
+                    raio = 10;
+                }
+
+                else if (deaths >= 301 && deaths <= 601) {
+                    raio = 15;
+                }
+
+                else if (deaths >= 602 && deaths <= 902) {
+                    raio = 20;
+                }
+
+                else if (deaths >= 903 && deaths <= 1200) {
+                    raio = 25;
+                }
+
+                else if (deaths > 1200) {
+                    raio = 30;
+                }
+
+                points.push({
+                    year: parseInt(element.iyear),
+                    latitude: element.latitude,
+                    longitude: element.longitude,
+                    fillKey: 'pnt',
+                    radius: raio,
+                    nkills: deaths
+                });
+            }
+
+            if (terroristData[processCountryNames(element.country_txt)] == null) {
+                terroristData[processCountryNames(element.country_txt)] = [element];
+                countryAtacks[processCountryNames(element.country_txt)] = {};
+                countryAtacks[processCountryNames(element.country_txt)][element.iyear] = 1;
+            }
+
+            else {
+                terroristData[processCountryNames(element.country_txt)].push(element);
+                var nrAtacks = terroristData[processCountryNames(element.country_txt)].length;
+                if (nrAtacks > maxAtacks) {
+                    maxAtacks = nrAtacks;
+                }
+                if (nrAtacks < minAtacks) {
+                    minAtacks = nrAtacks;
+                }
+                if(countryAtacks[processCountryNames(element.country_txt)][element.iyear] == null){
+                  countryAtacks[processCountryNames(element.country_txt)][element.iyear] = 1;
+                }
+                else{
+                  countryAtacks[processCountryNames(element.country_txt)][element.iyear] =  countryAtacks[processCountryNames(element.country_txt)][element.iyear] + 1;
+                  //console.log(countryAtacks[processCountryNames(element.country_txt)][element.iyear]);
+                }
+            }
         });
-        console.log(terroristData);
-        var colorPicker = palette(minAtacks, maxAtacks+1);
+
+        var colorPicker = palette(minAtacks, maxAtacks + 1);
         for (var i = 0, j = countries.length; i < j; i++) {
-            //console.log(countries[i].properties.name);
-            //console.log(terroristData[countries[i].properties.name]);
             if(terroristData[countries[i].properties.name] != null){
                mapColors[countries[i].id] = {
                 fillKey: codeColor(colorPicker(terroristData[countries[i].properties.name].length))
               }
-            }
-            else{
+           }
+           else{
              mapColors[countries[i].id] = {fillKey: 'noData'}
-            }
+           }
 
         }
-        var points = [
-            {"radius": 10, "fillKey": "pnt", "latitude": 41.89, "longitude": -88.31},
-            {"radius": 10, "fillKey": "pnt", "latitude": 40.113, "longitude": -88.261},
-            {"radius": 10, "fillKey": "pnt", "latitude": 25.7877, "longitude": -80.2241}
-        ];
+        var selectedCountry = "";
+        map1 = new Datamap({
+            scope: 'world',
+            element: document.getElementById('vista-mapa2'),
+            projection: 'mercator',
+            fills: {
+                noData: '#6E6E6E',
+                $58fa58: '#58fa58',
+                $a3fe30: '#a3fe30',
+                $d5ff00: '#d5ff00',
+                $ffff00: '#ffff00',
+                $ffc400: '#ffc400',
+                $ff8900: '#ff8900',
+                $ff4000: '#ff4000',
+                $ff2200: '#ff2200',
+                $d70002: '#d70002',
+                $8b0000: '#8b0000'
+            },
+            data: mapColors,
+            done: function(map) {
+              map.svg.selectAll('.datamaps-subunit').on('click', function(geo) {
+                alert(geo.properties.name);
+                selectedCountry = geo.properties.name;
+                updateData(getAttackArray(countryAtacks[geo.properties.name]))
+              })
+            }
+        });
+        //######chart###########3
+        var atacksYear = getAttackArray(countryAtacks['Afghanistan']);
+          x.domain(d3.extent(atacksYear, function(d) { return d.year; }));
+          y.domain(d3.extent(atacksYear, function(d) { return d.nrAttacks; }));
+          var xAxis = d3.svg.axis().orient("bottom").scale(x);
+          g.append("g")
+              .attr("transform", "translate(0," + height + ")")
+              .call(xAxis)
+              .select(".domain")
+              //.remove();
+        var yAxis = d3.svg.axis().orient("left").scale(y);
+          g.append("g")
+              .call(yAxis)
+            .append("text")
+              .attr("fill", "#000")
+              .attr("transform", "rotate(-90)")
+              .attr("y", 6)
+              .attr("dy", "0.71em")
+              .attr("text-anchor", "end")
+              .text("Nº Attacks");
 
-        var map = new Datamap({
+          g.append("path")
+              .datum(atacksYear)
+              .attr("fill", "none")
+              .attr("stroke", "steelblue")
+              .attr("stroke-linejoin", "round")
+              .attr("stroke-linecap", "round")
+              .attr("stroke-width", 3)
+              .attr("d", line);
+
+
+
+              // ** Update data section (Called from the onclick)
+              function updateData(updateData) {
+                  console.log(updateData);
+                  	// Scale the range of the data again
+                    x.domain(d3.extent(updateData, function(d) { return d.year; }));
+                    y.domain(d3.extent(updateData, function(d) { return d.nrAttacks; }));
+
+                  // Select the section we want to apply our changes to
+                  var svg = d3.select("vista-mapa2").transition();
+                  line = d3.svg.line()
+                      .x(function(d) { return x(d.year); })
+                      .y(function(d) { return y(d.nrAttacks);});
+                  // Make the changes
+                      svg.select(".line")   // change the line
+                          .duration(750)
+                          .attr("d", line);
+                      svg.select(".x.axis") // change the x axis
+                          .duration(750)
+                          .call(xAxis);
+                      svg.select(".y.axis") // change the y axis
+                          .duration(750)
+                          .call(yAxis);
+              }
+             //######chart###########3
+
+        map2 = new Datamap({
             scope: 'world',
             element: document.getElementById('vista-mapa'),
             projection: 'mercator',
             fills: {
-                 noData: '#6E6E6E',
-                 $58fa58: '#58fa58',
-                 $a3fe30:'#a3fe30',
-                 $d5ff00: '#d5ff00',
-                 $ffff00: '#ffff00',
-                 $ffc400: '#ffc400',
-                 $ff8900: '#ff8900',
-                 $ff4000: '#ff4000',
-                 $ff2200: '#ff2200',
-                 $d70002: '#d70002',
-                 $8b0000: '#8b0000'
-               },
-            data: mapColors
+                'pnt': 'red',
+                noData: '#6E6E6E',
+                $58fa58: '#58fa58',
+                $a3fe30: '#a3fe30',
+                $d5ff00: '#d5ff00',
+                $ffff00: '#ffff00',
+                $ffc400: '#ffc400',
+                $ff8900: '#ff8900',
+                $ff4000: '#ff4000',
+                $ff2200: '#ff2200',
+                $d70002: '#d70002',
+                $8b0000: '#8b0000',
+                green: '#ABDDA4'
+            }
         });
-        map.bubbles(points, {
-            fillOpacity: 1.0,
-            borderWidth: 0,
+
+        filteredPoints = points.filter(function (el) {
+            return years.includes(parseInt(el.year));
+        });
+
+        map2.bubbles(filteredPoints, {
+            fillOpacity: 0.5,
+            borderWidth: 1,
+            borderColor: '#990000',
             popupOnHover: false,
             highlightOnHover: false
         });
     });
 
+    $min_input = $('#min');
+    $max_input = $('#max');
 
+    $slider = $('#slider').slider({
+        orientation: 'vertical',
+        animate: "fast",
+        range: true,
+        min: 1970,
+        max: 2016,
+        values: [2015, 2016],
+        slide: function(event, ui) {
+            adjust(ui.values[0], ui.values[1]);
+        }
+    });
+
+    function adjust(min, max) {
+        $min_input.val(min);
+        $max_input.val(max);
+        $slider.find('.ui-slider-handle:first-of-type').attr('data-content',min);
+        $slider.find('.ui-slider-handle:last-of-type').attr('data-content',max);
+    }
+
+    var min = $slider.slider('values', 0);
+    var max = $slider.slider('values', 1);
+    adjust(min, max);
 </script>
 
 </body>
