@@ -21,10 +21,10 @@
     <link href="vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet">
     <link href="vendor/devicons/css/devicons.min.css" rel="stylesheet">
     <link href="vendor/simple-line-icons/css/simple-line-icons.css" rel="stylesheet">
-    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css">
 
 
     <!-- Custom styles for this template -->
+    <link rel="stylesheet" href="css/jquery_theme.css">
     <link href="css/resume.css" rel="stylesheet">
 
 
@@ -88,13 +88,21 @@
                 </div>
             </div>
         </div>
-        <div style="width: 100%; display: flex">
-            <div id="vista-mapa" style="position: relative; width: 986px; height: 850px; float: left"></div>
-            <div id="slider" name="slider" style="margin-left: 10px; height: 850px;"></div>
-            <input type="text" class="min date" id="min" value="1800" readonly>
-            <input type="text" class="max date" id="max" value="2015" readonly>
+        <div style="width: 100%; overflow: hidden;">
+            <div id="vista-mapa" style="position: relative; width: 986px; height: 850px; float: left;"></div>
+            <div id="slider" name="slider" style="margin-right: 60px; margin-top: 150px; height: 300px; float: right">
+                <input type="text" class="min date" id="min" value="1800" readonly>
+                <input type="text" class="max date" id="max" value="2015" readonly>
+                <button id="zoom-button-1" class="zoom-button" data-zoom="reset">Reset zoom</button>
+            </div>
+
         </div>
-        <div id="vista-mapa2" style="position: relative; width: 986px; height: 850px;"></div>
+
+
+        <div style="width: 100%; overflow: hidden;">
+            <div id="vista-mapa2" style="position: relative; width: 986px; height: 850px; float: left;"></div>
+            <button id="zoom-button-2", class="zoom-button" data-zoom="reset">Reset zoom</button>
+        </div>
     </section>
 
     <section class="resume-section p-3 p-lg-5 d-flex flex-column" id="gráfico">
@@ -187,9 +195,11 @@
     var mapColors = {};
     var points = [];
     var filteredPoints;
-    var years = [2016];
     var minAtacks = Number.MAX_SAFE_INTEGER;
     var maxAtacks = 0;
+    var zoom1;
+    var zoom2;
+    var scale = 1.0;
 
     d3.csv("relevant_terrorist.csv", function (data) {
         data.forEach(function (element) {
@@ -198,27 +208,27 @@
                 var raio = 1;
 
                 if (deaths >= 1 && deaths <= 100) {
-                    raio = 5.5;
+                    raio = 4;
                 }
 
                 if (deaths >= 101 && deaths <= 300) {
-                    raio = 10;
+                    raio = 8;
                 }
 
                 else if (deaths >= 301 && deaths <= 601) {
-                    raio = 15;
+                    raio = 13;
                 }
 
                 else if (deaths >= 602 && deaths <= 902) {
-                    raio = 20;
+                    raio = 18;
                 }
 
                 else if (deaths >= 903 && deaths <= 1200) {
-                    raio = 25;
+                    raio = 23;
                 }
 
                 else if (deaths > 1200) {
-                    raio = 30;
+                    raio = 27;
                 }
 
                 points.push({
@@ -251,15 +261,12 @@
         for (var i = 0, j = countries.length; i < j; i++) {
             console.log(countries[i].properties.name);
             if (terroristData[countries[i].properties.name] != null) {
-                mapColors[countries[i].id] = {fillKey: 'red'};
-                if (terroristData[countries[i].properties.name] != null) {
-                    mapColors[countries[i].id] = {
-                        fillKey: codeColor(colorPicker(terroristData[countries[i].properties.name].length))
-                    }
+                mapColors[countries[i].id] = {
+                    fillKey: codeColor(colorPicker(terroristData[countries[i].properties.name].length))
                 }
-                else {
-                    mapColors[countries[i].id] = {fillKey: 'noData'}
-                }
+            }
+            else {
+                mapColors[countries[i].id] = {fillKey: 'noData'}
             }
         }
 
@@ -280,7 +287,14 @@
                 $d70002: '#d70002',
                 $8b0000: '#8b0000'
             },
-            data: mapColors
+            data: mapColors,
+            done: function(datamap) {
+                zoom1 = d3.behavior.zoom();
+                datamap.svg.call(zoom1.on("zoom", redraw));
+                function redraw() {
+                    datamap.svg.selectAll("g").attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+                }
+            }
         });
 
         map2 = new Datamap({
@@ -290,23 +304,29 @@
             fills: {
                 'pnt': 'red',
                 noData: '#6E6E6E',
-                $58fa58: '#58fa58',
-                $a3fe30: '#a3fe30',
-                $d5ff00: '#d5ff00',
-                $ffff00: '#ffff00',
-                $ffc400: '#ffc400',
-                $ff8900: '#ff8900',
-                $ff4000: '#ff4000',
-                $ff2200: '#ff2200',
-                $d70002: '#d70002',
-                $8b0000: '#8b0000',
-                green: '#ABDDA4'
+                $58fa58: '#ABDDA4',
+                $a3fe30: '#ABDDA4',
+                $d5ff00: '#ABDDA4',
+                $ffff00: '#ABDDA4',
+                $ffc400: '#ABDDA4',
+                $ff8900: '#ABDDA4',
+                $ff4000: '#ABDDA4',
+                $ff2200: '#ABDDA4',
+                $d70002: '#ABDDA4',
+                $8b0000: '#ABDDA4'
             },
-            data: mapColors
+            data: mapColors,
+            done: function(datamap) {
+                zoom2 = d3.behavior.zoom();
+                datamap.svg.call(zoom2.on("zoom", redraw));
+                function redraw() {
+                    datamap.svg.selectAll("g").attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+                }
+            }
         });
 
         filteredPoints = points.filter(function (el) {
-            return years.includes(parseInt(el.year));
+            return parseInt(el.year) >= min && parseInt(el.year) <= max;
         });
 
         map2.bubbles(filteredPoints, {
@@ -327,22 +347,51 @@
         range: true,
         min: 1970,
         max: 2016,
-        values: [2015, 2016],
-        slide: function(event, ui) {
+        values: [2016, 2016],
+        slide: function (event, ui) {
             adjust(ui.values[0], ui.values[1]);
+        },
+        stop: function (event, ui){
+            updateMap(ui.values[0], ui.values[1]);
         }
     });
 
     function adjust(min, max) {
         $min_input.val(min);
         $max_input.val(max);
-        $slider.find('.ui-slider-handle:first-of-type').attr('data-content',min);
-        $slider.find('.ui-slider-handle:last-of-type').attr('data-content',max);
+        $slider.find('.ui-slider-handle:first-of-type').attr('data-content', min);
+        $slider.find('.ui-slider-handle:last-of-type').attr('data-content', max);
     }
+
+    function updateMap(min, max) {
+        filteredPoints = points.filter(function (el) {
+            return parseInt(el.year) >= min && parseInt(el.year) <= max;
+        });
+
+        map2.bubbles(filteredPoints, {
+            fillOpacity: 0.5,
+            borderWidth: 1,
+            borderColor: '#990000',
+            popupOnHover: false,
+            highlightOnHover: false
+        });
+     }
+
 
     var min = $slider.slider('values', 0);
     var max = $slider.slider('values', 1);
     adjust(min, max);
+
+    $("#zoom-button-1").click(function () {
+        map2.svg.selectAll("g").attr("transform", "translate(0,0)scale(1,1)");
+        zoom2.scale(scale).translate([0,0]);
+    });
+
+    $("#zoom-button-2").click(function () {
+        map1.svg.selectAll("g").attr("transform", "translate(0,0)scale(1,1)");
+        zoom1.scale(scale).translate([0,0]);
+    });
+
 </script>
 
 </body>
