@@ -122,6 +122,12 @@ a {
   position: absolute;
   margin-top: 20px;
   content: attr(data-content);
+  font-size: medium;
+}
+
+.ui-slider-handle:last-of-type:after {
+  margin-top: -25px;
+
 }
 
 .zoom-button {
