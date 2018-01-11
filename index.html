@@ -128,12 +128,15 @@
             <button id="hide_attacks" class="zoom-button" data-zoom="reset"
                     style="margin-top: 10px; margin-left: 20px; width: 170px; float: left;">Esconder ataques</button>
             <img src="img/legenda.png">
-            <div id="slider" name="slider" style=" width: 230px; margin-left: 20px; margin-top: 40px; float: left">
-                <input type="text" class="min date" id="min" value="1800" readonly>
+            <label for="slider" style="margin-left: 20px; padding-bottom: 20px;">Intervalo temporal</label>
+            <div id="slider" name="slider" style=" width: 230px; margin-left: 20px; margin-bottom: 20px; float: left">
+                <input type="text" class="min date" id="min" value="1970" readonly>
                 <input type="text" class="max date" id="max" value="2015" readonly>
 
             </div>
-            <div id="slider2" name="slider2" style="margin-top: 40px; margin-left: 20px; width: 230px; float: left">
+            <label for="slider2" style="margin-left: 20px; margin-top: 20px; padding-bottom: 20px;">Número de mortes</label>
+            <div id="slider2" name="slider2" style="margin-bottom: 20px; margin-left: 20px;
+            width: 230px; float: left">
                 <input type="text" class="min date" id="min-deaths" value="1" readonly>
                 <input type="text" class="max date" id="max-deaths" value="1500" readonly>
             </div>
@@ -379,13 +382,15 @@
             y.domain(d3.extent(atacksYear, function (d) {
                 return d.nrAttacks;
             }));
-            var xAxis = d3.svg.axis().orient("bottom").scale(x);
+            var xAxis = d3.svg.axis().orient("bottom").scale(x).tickFormat(d3.format("d"));
+
             svg.append("g")
                 .attr("class", "xAxis")
                 .attr("transform", "translate(0," + height + ")")
-                .call(xAxis)
+                .call(xAxis);
             //.remove();
-            var yAxis = d3.svg.axis().orient("left").scale(y);
+
+            var yAxis = d3.svg.axis().orient("left").scale(y).tickFormat(d3.format("d"));
             svg.append("g")
                 .attr("class", "yAxis")
                 .call(yAxis)
@@ -473,13 +478,13 @@
                 y.domain(d3.extent(updateData, function (d) {
                     return d.nrAttacks;
                 }));
-                var xAxis = d3.svg.axis().orient("bottom").scale(x);
+                var xAxis = d3.svg.axis().orient("bottom").scale(x).tickFormat(d3.format("d"));
                 svg.append("g")
                     .attr("class", "xAxis")
                     .attr("transform", "translate(0," + height + ")")
                     .call(xAxis)
                 //.remove();
-                var yAxis = d3.svg.axis().orient("left").scale(y);
+                var yAxis = d3.svg.axis().orient("left").scale(y).tickFormat(d3.format("d"));
                 svg.append("g")
                     .attr("class", "yAxis")
                     .call(yAxis)
